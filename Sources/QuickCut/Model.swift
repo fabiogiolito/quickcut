@@ -215,6 +215,16 @@ enum RenameTarget: Equatable {
         isPlaying = player.rate != 0
     }
 
+    /// Frame step (pauses), or ⇧ for a 1-second jump.
+    func step(_ dir: Int, bySecond: Bool) {
+        guard let take else { return }
+        if bySecond {
+            seek(min(max(currentTime + Double(dir), 0), take.segments.duration))
+        } else {
+            player.currentItem?.step(byCount: dir)
+        }
+    }
+
     func seek(_ t: Double) {
         currentTime = t
         player.seek(to: CMTime(seconds: t, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
