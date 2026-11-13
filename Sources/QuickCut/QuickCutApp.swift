@@ -1,5 +1,8 @@
 import AVKit
 import SwiftUI
+#if UPDATER
+import Sparkle
+#endif
 
 @main
 struct QuickCutApp: App {
@@ -11,6 +14,11 @@ struct QuickCutApp: App {
             ContentView().environment(editor)
         }
         .commands {
+            #if UPDATER
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") { appDelegate.updater.checkForUpdates(nil) }
+            }
+            #endif
             CommandGroup(replacing: .newItem) {
                 Button("Open…") { editor.showOpen = true }.keyboardShortcut("o")
                 Button("Save Video") { if let t = editor.take { editor.save(t) } }
@@ -55,9 +63,18 @@ struct QuickCutApp: App {
 
 /// Needed so a bare SwiftPM executable shows up as a regular foreground app.
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    #if UPDATER
+    /// Release builds only (Package.swift). Checks the feed in `SUFeedURL` in the background.
+    let updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    #endif
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate()
+        #if UPDATER
+        // Sparkle's own schedule waits a day between checks; check on every launch too. Prompts only if one is found.
+        updater.updater.checkForUpdatesInBackground()
+        #endif
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 }
