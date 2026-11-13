@@ -2,7 +2,7 @@
 # Builds QuickCut.app next to this script.
 set -e
 cd "$(dirname "$0")"
-swift build -c release
+swift build -c release >&2
 APP=QuickCut.app
 rm -rf "$APP" && mkdir -p "$APP/Contents/MacOS"
 cp .build/release/QuickCut "$APP/Contents/MacOS/"
@@ -20,4 +20,4 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>NSHighResolutionCapable</key><true/>
 </dict></plist>
 PLIST
-echo "Built $APP"
+echo "$PWD/$APP"
