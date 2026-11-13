@@ -78,6 +78,16 @@ struct ContentView: View {
         }
         .navigationTitle(editor.take?.name ?? "QuickCut")
         .frame(minWidth: 800, minHeight: 500)
+        .onAppear {
+            // Bare-key menu shortcuts lose to the focused view (list, buttons), so catch space first.
+            NSEvent.addLocalMonitorForEvents(matching: .keyDown) { e in
+                guard e.keyCode == 49, e.modifierFlags.intersection(.deviceIndependentFlagsMask).isEmpty,
+                      editor.take?.progress == nil, editor.take != nil, editor.renaming == nil,
+                      !(NSApp.keyWindow?.firstResponder is NSText) else { return e }
+                editor.togglePlay()
+                return nil
+            }
+        }
         .onChange(of: editor.selectedTakeID) {
             editor.selection = []
             editor.currentTime = 0
