@@ -323,8 +323,13 @@ async function script() {
   key(['Space'], 'Pause', $('#playBtn'));
   setPlaying(false);
   selectUnderPlayhead();
-  await wait(800);
-  key(['⌫'], 'Delete segment', $('#delBtn'));
+  await wait(400);
+  // Click the trash button to delete the selected piece.
+  await moveTo(center($('#delBtn')), 700);
+  await click();
+  say('Delete segment');
+  $('#delBtn').classList.add('flash');
+  later(250, () => $('#delBtn').classList.remove('flash'));
   del();
   await wait(1200);
 
