@@ -1,0 +1,80 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "display-p3:0.01465,0.03407,0.06305,1.00000",
+      "display-p3:0.19848,0.19886,0.22178,1.00000"
+    ]
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill" : {
+            "automatic-gradient" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+          },
+          "image-name" : "quickcut_film.svg",
+          "name" : "quickcut_film",
+          "position" : {
+            "scale" : 0.1,
+            "translation-in-points" : [
+              26.11209232217061,
+              14.40100000000001
+            ]
+          }
+        }
+      ],
+      "name" : "Film",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    },
+    {
+      "layers" : [
+        {
+          "fill" : "system-light",
+          "image-name" : "quickcut_front.svg",
+          "name" : "quickcut_front",
+          "position" : {
+            "scale" : 0.1,
+            "translation-in-points" : [
+              26,
+              14
+            ]
+          }
+        },
+        {
+          "fill" : "system-light",
+          "image-name" : "quickcut_back.svg",
+          "name" : "quickcut_back",
+          "position" : {
+            "scale" : 0.1,
+            "translation-in-points" : [
+              26,
+              10
+            ]
+          }
+        }
+      ],
+      "name" : "Sissor",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
