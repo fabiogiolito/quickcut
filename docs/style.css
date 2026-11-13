@@ -44,7 +44,7 @@ kbd + kbd { margin-left: 4px; }
 kbd.wide { padding: 0 12px; font-size: 13px; }
 
 .bottom { flex: none; display: flex; align-items: center; justify-content: center; gap: 12px 32px; flex-wrap: wrap; padding: 12px clamp(16px, 4vw, 40px) 20px; }
-.code { display: flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; height: 38px; padding: 0 4px 0 14px; border-radius: 10px; background: #1c1c1e; color: #e5e5e7;
+.code { display: flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; padding: 4px 4px 4px 14px; border-radius: 10px; background: #1c1c1e; color: #e5e5e7;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
 .code code { font: 12.5px ui-monospace, "SF Mono", Menlo, monospace; white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
 .code code::before { content: "$ "; color: #8e8e93; }
