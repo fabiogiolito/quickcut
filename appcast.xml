@@ -13,7 +13,7 @@
 - Open videos, cut at the playhead, delete the parts you don't want and drag the rest into order
 - Save the whole edit, or right-click any clip to save it as its own file
 - Nothing is re-encoded, so even long 4K videos save almost instantly]]></description>
-      <enclosure url="https://github.com/fabiogiolito/quickcut/releases/download/v1.0.0/QuickCut-1.0.0.zip" sparkle:edSignature="Pum7pMLVBqg9sl7DT4aRCryQDwVfrwsqfKgKLtJ0i39mW6G2rMZcSv5b93UhNl844nXjnqe5Xkha74iFqCM0CA==" length="1293590" type="application/octet-stream"/>
+      <enclosure url="https://github.com/fabiogiolito/quickcut/releases/download/v1.0.0/QuickCut-1.0.0.zip" sparkle:edSignature="pGH5v4I2/aSjPaVA3ENv3pRszDwBhbEQAX5IILg5g//3wDpvKp1Vq6dA79iVaJqb2tjaYxYH4VOWIhU+Kmy8Dw==" length="3449619" type="application/octet-stream"/>
     </item>
   </channel>
 </rss>
