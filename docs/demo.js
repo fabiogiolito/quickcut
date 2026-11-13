@@ -335,12 +335,8 @@ async function script() {
   del();
   await wait(1200);
 
-  // Save.
-  await moveTo({ x: win.offsetWidth * 0.62, y: win.offsetHeight * 0.4 }, 600);
-  cursor.classList.add('hidden');
-  key(['⌘', 'S'], 'Save “Beach Trip Clip 2 edit.mov”');
-  await exportAs('Beach Trip Clip 2 edit', clipTake.src, total());
-  await wait(2400);
+  // Hold on the trimmed clip, then start over.
+  await wait(800);
   win.classList.add('reset');
   await wait(450);
 }
