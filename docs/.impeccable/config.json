@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/style.css"
+        ],
+        "createdAt": "2026-11-13T12:03:59.208Z",
+        "reason": "agent: only glows in this stylesheet are the sun halos inside the illustrated video scenes of the app demo (literal light sources, not UI chrome)"
+      }
+    ]
+  }
+}
