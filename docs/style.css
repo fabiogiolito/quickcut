@@ -34,8 +34,8 @@ p { text-wrap: pretty; }
   text-decoration: none; background: var(--card); border: 1px solid var(--line); transition: transform .15s, background .2s; }
 .btn:hover { transform: translateY(-1px); }
 .btn:active { transform: scale(.97); }
-.btn.primary { background: var(--accent); color: #fff; border-color: transparent; }
-.btn.primary:hover { background: #2b95ff; }
+.btn.primary { background: #0071e3; color: #fff; border-color: transparent; }
+.btn.primary:hover { background: #0062c4; }
 a:focus-visible, button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 2px; }
 
 /* Hero */
