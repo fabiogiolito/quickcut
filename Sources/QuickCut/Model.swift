@@ -222,6 +222,16 @@ enum RenameTarget: Equatable {
         move(take.segments[i].id, to: take.segments[i + dir].id)
     }
 
+    /// Tab / ⇧Tab: select the next (+1) or previous (-1) clip and jump to its start.
+    func selectClip(_ dir: Int) {
+        guard let take else { return }
+        let segs = take.segments
+        let cur = segs.firstIndex { selection.contains($0.id) } ?? segs.locate(currentTime)?.index ?? segs.count
+        let i = min(max(cur + dir, 0), segs.count - 1)
+        selection = [segs[i].id]
+        seek(segs.startTime(of: i), select: false)
+    }
+
     func saveSelectedClips() {
         take?.segments.filter { selection.contains($0.id) }.forEach(saveClip)
     }

@@ -36,6 +36,10 @@ struct QuickCutApp: App {
                     .keyboardShortcut(.leftArrow, modifiers: .shift).disabled(busy)
                 Button("Forward 1 Second") { editor.step(1, bySecond: true) }
                     .keyboardShortcut(.rightArrow, modifiers: .shift).disabled(busy)
+                Button("Next Clip") { editor.selectClip(1) }
+                    .keyboardShortcut(.tab, modifiers: []).disabled(busy)
+                Button("Previous Clip") { editor.selectClip(-1) }
+                    .keyboardShortcut(.tab, modifiers: .shift).disabled(busy)
                 Button("Move Clip Left") { editor.moveSelected(-1) }
                     .keyboardShortcut(.leftArrow, modifiers: .command).disabled(busy)
                 Button("Move Clip Right") { editor.moveSelected(1) }
@@ -110,6 +114,7 @@ struct ContentView: View {
                 case (123, .command): editor.moveSelected(-1)
                 case (124, .command): editor.moveSelected(1)
                 case (51, []), (117, []): editor.deleteSelection()
+                case (48, []), (48, .shift): editor.selectClip(mods == .shift ? -1 : 1)
                 default: return e
                 }
                 return nil
