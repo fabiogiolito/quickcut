@@ -13,9 +13,9 @@ struct QuickCutApp: App {
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button("Open…") { editor.showOpen = true }.keyboardShortcut("o")
-                Button("Save Video") { if let t = editor.take { Task { await editor.save(t) } } }
+                Button("Save Video") { if let t = editor.take { editor.save(t) } }
                     .keyboardShortcut("s")
-                    .disabled(editor.take == nil || editor.exporting)
+                    .disabled(editor.take == nil || editor.take?.progress != nil)
             }
             CommandMenu("Timeline") {
                 // Disabled while renaming so typing in the field doesn't trigger them.
@@ -48,19 +48,28 @@ struct ContentView: View {
         @Bindable var editor = editor
         NavigationSplitView {
             List(editor.takes, selection: $editor.selectedTakeID) { take in
-                Label(take.name, systemImage: "film")
-                    .tag(take.id)
-                    .contextMenu {
-                        Button("Rename…") { editor.renaming = .take(take.id) }
-                        Button("Save Video") { Task { await editor.save(take) } }.disabled(editor.exporting)
+                HStack {
+                    Label(take.name, systemImage: "film")
+                    Spacer()
+                    if let p = take.progress {
+                        ProgressView(value: p).progressViewStyle(.circular).controlSize(.small)
                     }
+                }
+                .tag(take.id)
+                .contextMenu {
+                    Button("Rename…") { editor.renaming = .take(take.id) }
+                    Button("Save Video") { editor.save(take) }
+                }
+                .disabled(take.progress != nil)
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 220)
             .toolbar {
                 Button("Open", systemImage: "plus") { editor.showOpen = true }
             }
         } detail: {
-            if editor.take != nil {
+            if editor.take?.progress != nil {
+                ProgressView("Saving…")
+            } else if editor.take != nil {
                 EditorView()
             } else {
                 ContentUnavailableView("No Video", systemImage: "film",
@@ -87,11 +96,6 @@ struct ContentView: View {
         .alert("Error", isPresented: Binding(get: { editor.error != nil }, set: { if !$0 { editor.error = nil } })) {
             Button("OK") {}
         } message: { Text(editor.error ?? "") }
-        .overlay {
-            if editor.exporting {
-                ProgressView("Saving video…").padding().background(.regularMaterial, in: .rect(cornerRadius: 10))
-            }
-        }
     }
 }
 
@@ -123,7 +127,7 @@ struct EditorView: View {
     }
 
     private var saveButton: some View {
-        Button("Save Video") { if let t = editor.take { Task { await editor.save(t) } } }.disabled(editor.exporting)
+        Button("Save Video") { if let t = editor.take { editor.save(t) } }
     }
 }
 
@@ -162,7 +166,7 @@ struct TimelineStrip: View {
                                         editor.deleteSelection()
                                     }
                                     Divider()
-                                    Button("Save Video") { Task { await editor.save(take) } }.disabled(editor.exporting)
+                                    Button("Save Clip") { editor.saveClip(seg) }
                                 }
                         }
                     }
@@ -183,7 +187,7 @@ struct TimelineStrip: View {
         return RoundedRectangle(cornerRadius: 4)
             .fill(Color(hue: Double(index % 6) / 6, saturation: 0.45, brightness: 0.75).gradient)
             .overlay(alignment: .topLeading) {
-                Text(seg.name ?? "Clip \(index + 1)")
+                Text(seg.name)
                     .font(.caption).lineLimit(1).padding(4)
                     .foregroundStyle(.white)
             }

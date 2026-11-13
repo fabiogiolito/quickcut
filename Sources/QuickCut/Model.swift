@@ -4,7 +4,7 @@ import Observation
 /// A piece of the source file, in source seconds.
 struct Segment: Identifiable, Equatable {
     var id = UUID()
-    var name: String?
+    var name = "Clip 1"
     var start: Double
     var end: Double
     var duration: Double { end - start }
@@ -27,10 +27,11 @@ extension Array where Element == Segment {
     func startTime(of index: Int) -> Double { prefix(index).reduce(0) { $0 + $1.duration } }
 
     @discardableResult
-    mutating func split(at t: Double, minLength: Double = 0.05) -> Bool {
+    mutating func split(at t: Double, name: String, minLength: Double = 0.05) -> Bool {
         guard let (i, off) = locate(t), off >= minLength, self[i].duration - off >= minLength else { return false }
         var right = self[i]
         right.id = UUID()
+        right.name = name
         right.start += off
         self[i].end = right.start
         insert(right, at: i + 1)
@@ -51,6 +52,9 @@ extension Array where Element == Segment {
     let id = UUID()
     var url: URL
     var segments: [Segment]
+    var clipCount = 1
+    /// Export progress while this file is still being written; nil once it's ready.
+    var progress: Double?
     var name: String { url.deletingPathExtension().lastPathComponent }
 
     init(url: URL, duration: Double) {
@@ -71,7 +75,6 @@ enum RenameTarget: Equatable {
     var currentTime = 0.0
     var isPlaying = false
     var showOpen = false
-    var exporting = false
     var renaming: RenameTarget?
     var error: String?
 
@@ -105,24 +108,46 @@ enum RenameTarget: Equatable {
         if selectedTakeID == nil { selectedTakeID = takes.first?.id }
     }
 
-    func save(_ take: Take) async {
-        exporting = true
-        defer { exporting = false }
-        do {
-            let comp = try await Self.composition(url: take.url, segments: take.segments)
-            guard let session = AVAssetExportSession(asset: comp, presetName: AVAssetExportPresetHighestQuality) else {
-                throw CocoaError(.featureUnsupported)
+    func save(_ take: Take) {
+        export(take.segments, of: take.url, as: "\(take.name) edit")
+    }
+
+    func saveClip(_ seg: Segment) {
+        guard let take else { return }
+        export([seg], of: take.url, as: "\(take.name) \(seg.name)")
+    }
+
+    /// Adds the output to the file list right away and writes it in the background.
+    private func export(_ segments: [Segment], of source: URL, as baseName: String) {
+        let baseName = baseName.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
+        let dir = source.deletingLastPathComponent()
+        var out = dir.appendingPathComponent("\(baseName).mov")
+        var n = 2
+        while FileManager.default.fileExists(atPath: out.path) || takes.contains(where: { $0.url == out }) {
+            out = dir.appendingPathComponent("\(baseName) \(n).mov"); n += 1
+        }
+        let new = Take(url: out, duration: segments.duration)
+        new.progress = 0
+        takes.append(new)
+        Task {
+            do {
+                let comp = try await Self.composition(url: source, segments: segments)
+                // Passthrough: no re-encode, so it's near-instant even for long 4K videos.
+                guard let session = AVAssetExportSession(asset: comp, presetName: AVAssetExportPresetPassthrough) else {
+                    throw CocoaError(.featureUnsupported)
+                }
+                let watch = Task {
+                    for await case .exporting(let p) in session.states(updateInterval: 0.1) { new.progress = p.fractionCompleted }
+                }
+                defer { watch.cancel() }
+                try await session.export(to: out, as: .mov)
+                new.progress = nil
+                if new.id == selectedTakeID { reload() }
+            } catch {
+                takes.removeAll { $0 === new }
+                if selectedTakeID == new.id { selectedTakeID = takes.first?.id }
+                self.error = "Couldn't save \(out.lastPathComponent): \(error.localizedDescription)"
             }
-            let dir = take.url.deletingLastPathComponent()
-            var out = dir.appendingPathComponent("\(take.name) edit.mov")
-            var n = 2
-            while FileManager.default.fileExists(atPath: out.path) {
-                out = dir.appendingPathComponent("\(take.name) edit \(n).mov"); n += 1
-            }
-            try await session.export(to: out, as: .mov)
-            await open([out])
-        } catch {
-            self.error = "Couldn't save video: \(error.localizedDescription)"
         }
     }
 
@@ -158,7 +183,8 @@ enum RenameTarget: Equatable {
     // MARK: Editing
 
     func cut() {
-        take?.segments.split(at: currentTime)
+        guard let take, take.segments.split(at: currentTime, name: "Clip \(take.clipCount + 1)") else { return }
+        take.clipCount += 1
     }
 
     func deleteSelection() {
@@ -191,7 +217,7 @@ enum RenameTarget: Equatable {
     /// Rebuilds the player item from the current take's segments, keeping the playhead.
     func reload() {
         reloadTask?.cancel()
-        guard let take else { player.replaceCurrentItem(with: nil); return }
+        guard let take, take.progress == nil else { player.replaceCurrentItem(with: nil); return }
         let t = min(currentTime, take.segments.duration)
         let (url, segments) = (take.url, take.segments)
         reloadTask = Task {
