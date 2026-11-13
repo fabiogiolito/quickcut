@@ -116,7 +116,8 @@ kbd.wide { padding: 0 12px; font-size: 13px; }
   -webkit-mask-image: linear-gradient(to top, transparent calc(var(--p) * 100%), #000 calc(var(--p) * 100% + 25%));
   mask-image: linear-gradient(to top, transparent calc(var(--p) * 100%), #000 calc(var(--p) * 100% + 25%)); }
 .ocean { background: linear-gradient(#bde9ff, #5ab8f0 60%); }
-.ocean .boat { left: calc(8% + var(--p) * 60%); bottom: 11%; width: 12%; aspect-ratio: 1; }
+.ocean .boat { left: calc(34% + var(--p) * 14%); bottom: 11%; width: 12%; aspect-ratio: 1;
+  transform: translateY(calc(var(--bob, 0) * 7%)) rotate(calc(var(--bob, 0) * -3deg)); transform-origin: 50% 90%; }
 .ocean .boat::before { content: ""; position: absolute; left: 20%; bottom: 20%; border-left: 0 solid transparent; border-right: 34px solid transparent;
   border-bottom: 56px solid #fff; transform: scale(.9); transform-origin: bottom left; }
 .ocean .boat::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22%; background: #e2554f; border-radius: 0 0 40% 40%; }

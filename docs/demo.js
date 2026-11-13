@@ -105,6 +105,7 @@ function render() {
     const [a, b, name] = SHOTS.find(([, b]) => src < b) || SHOTS[2];
     frame.dataset.shot = name;
     frame.style.setProperty('--p', Math.min(1, (src - a) / (b - a)).toFixed(3));
+    frame.style.setProperty('--bob', Math.sin(src * Math.PI).toFixed(3)); // gentle bobbing, tied to video time
   }
   win.classList.toggle('playing', playing);
   els.forEach((el, id) => el.classList.toggle('sel', sel.has(id)));
