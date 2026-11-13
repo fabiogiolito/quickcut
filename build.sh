@@ -9,7 +9,11 @@ rm -rf "$APP" && mkdir -p "$APP/Contents/MacOS"
 # the window in the old compatibility style (misaligned sidebar/toolbar). Stamp the real SDK.
 xcrun vtool -set-build-version macos 15.0 "$(xcrun --show-sdk-version)" -replace \
   -output "$APP/Contents/MacOS/QuickCut" .build/release/QuickCut
-codesign -s - -f "$APP/Contents/MacOS/QuickCut" 2>/dev/null
+mkdir -p "$APP/Contents/Resources"
+# Compile the Icon Composer icon into Assets.car (macOS 26 Liquid Glass) + QuickCut.icns (older macOS).
+xcrun actool QuickCut.icon --compile "$APP/Contents/Resources" --app-icon QuickCut \
+  --platform macosx --minimum-deployment-target 15.0 \
+  --output-partial-info-plist /dev/null >/dev/null
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -17,6 +21,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleName</key><string>QuickCut</string>
   <key>CFBundleIdentifier</key><string>com.fabiogiolito.QuickCut</string>
   <key>CFBundleExecutable</key><string>QuickCut</string>
+  <key>CFBundleIconFile</key><string>QuickCut</string>
+  <key>CFBundleIconName</key><string>QuickCut</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>1.0</string>
   <key>LSMinimumSystemVersion</key><string>15.0</string>
@@ -24,4 +30,5 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>NSHighResolutionCapable</key><true/>
 </dict></plist>
 PLIST
+codesign -s - -f "$APP" 2>/dev/null
 echo "$PWD/$APP"
