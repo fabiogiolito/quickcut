@@ -5,7 +5,11 @@ cd "$(dirname "$0")"
 swift build -c release >&2
 APP=QuickCut.app
 rm -rf "$APP" && mkdir -p "$APP/Contents/MacOS"
-cp .build/release/QuickCut "$APP/Contents/MacOS/"
+# SwiftPM stamps the binary with sdk = deployment target (15.0), which makes AppKit draw
+# the window in the old compatibility style (misaligned sidebar/toolbar). Stamp the real SDK.
+xcrun vtool -set-build-version macos 15.0 "$(xcrun --show-sdk-version)" -replace \
+  -output "$APP/Contents/MacOS/QuickCut" .build/release/QuickCut
+codesign -s - -f "$APP/Contents/MacOS/QuickCut" 2>/dev/null
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
