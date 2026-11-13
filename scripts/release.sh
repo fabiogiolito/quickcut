@@ -50,7 +50,7 @@ echo "release: QuickCut $VERSION (build $BUILD), signing with $DEVELOPER_ID" >&2
 mkdir -p dist
 if [ -z "$NOTES" ]; then
   NOTES=dist/notes-$VERSION.md
-  git log --format='- %s' ${LAST:+$LAST..}HEAD > "$NOTES"
+  git log --no-merges --format='- %s' ${LAST:+$LAST..}HEAD > "$NOTES"
 fi
 
 # 2. Release build.
