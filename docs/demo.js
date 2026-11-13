@@ -324,14 +324,9 @@ async function script() {
   await wait(700);
   key(['⌘', 'B'], 'Cut at playhead', $('#cutBtn'));
   cut();
+  sel = new Set([segs[segs.length - 1].id]); // the cut-off tail comes up selected
   await wait(700);
-  // Select the new tail piece, then click the trash button to delete it.
-  const tail = segs[segs.length - 1];
-  await moveTo(center(els.get(tail.id)), 700);
-  await click();
-  sel = new Set([tail.id]);
-  t = startOf(idx(tail.id)) + (tail.end - tail.start) / 2;
-  await wait(500);
+  // Straight to the trash button to delete it.
   await moveTo(center($('#delBtn')), 700);
   await click();
   say('Delete segment');
