@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>QuickCut: the quick way to cut videos on your Mac</title>
-<meta name="description" content="QuickCut is the simple, quick way to edit videos and cut clips on macOS. Open, cut, delete, save. No timeline-editor complexity.">
+<title>QuickCut: save clips and edit videos on your Mac</title>
+<meta name="description" content="QuickCut: save clips and edit videos. A tiny native video cutter for macOS.">
 <meta name="color-scheme" content="light dark">
 <meta property="og:title" content="QuickCut">
-<meta property="og:description" content="The simple, quick way to edit videos and cut clips on your Mac.">
+<meta property="og:description" content="Save clips and edit videos. A tiny native video cutter for macOS.">
 <meta property="og:image" content="icon.png">
 <link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
@@ -15,29 +15,15 @@
 </head>
 <body>
 
-<nav class="nav">
+<header class="top">
   <a class="brand" href="./"><img src="icon.png" alt="" width="28" height="28">QuickCut</a>
-  <div class="nav-links">
-    <a href="#features">Features</a>
-    <a href="#shortcuts">Shortcuts</a>
-    <a href="#download">Download</a>
-    <a class="gh" href="https://github.com/fabiogiolito/quickcut" aria-label="QuickCut on GitHub"><svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg></a>
-  </div>
-</nav>
-
-<header class="hero">
-  <img class="hero-icon" src="icon.png" alt="QuickCut app icon" width="112" height="112">
-  <h1>Open. Cut. Delete. Save.</h1>
-  <p class="tagline">QuickCut is the simple, quick way to edit videos and cut clips on your Mac. None of the timeline-editor complexity.</p>
-  <div class="ctas">
-    <a class="btn primary" href="#download">Get QuickCut</a>
-    <a class="btn" href="https://github.com/fabiogiolito/quickcut">View on GitHub</a>
-  </div>
-  <p class="req">Native SwiftUI app · macOS 15 or later</p>
+  <a class="gh" href="https://github.com/fabiogiolito/quickcut"><svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg><span>GitHub</span></a>
 </header>
 
-<section class="demo" aria-label="Animated preview of QuickCut">
-  <div class="stage" id="stage" role="img" aria-label="QuickCut window: a video is opened, played, cut twice with Command-B, one segment is deleted with Delete, another is dragged to reorder it, and the edit is saved with Command-S.">
+<main class="hero">
+  <h1>Save clips and edit videos</h1>
+  <p class="tagline">A tiny, native video cutter for macOS 15+</p>
+  <div class="stage" id="stage" role="img" aria-label="QuickCut window: a video is opened, played and cut into three clips with Command-B. One clip is right-clicked and saved as a new file in the sidebar, another is dragged to reorder it, then the saved clip is opened, cut again, its end deleted with Delete, and saved with Command-S.">
     <div class="win" id="win" aria-hidden="true">
       <span class="lights"><i></i><i></i><i></i></span>
       <aside class="side">
@@ -79,57 +65,20 @@
           </div>
         </div>
       </section>
+      <div class="menu" id="menu"><div>Rename…</div><div>Delete</div><hr><div id="saveClipItem">Save Clip</div></div>
       <svg class="cursor" id="cursor" viewBox="0 0 24 24" width="24" height="24"><path d="M5 2.5v17.2l4.4-4.2 2.9 6.6 2.7-1.2-2.9-6.4h6.1z" fill="#000" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
     </div>
   </div>
+  </div>
   <div class="hud" id="hud" aria-hidden="true"></div>
-</section>
+</main>
 
-<section class="features" id="features">
-  <h2>Everything you need. Nothing you don’t.</h2>
-  <div class="grid">
-    <article><kbd>⌘</kbd><kbd>B</kbd><h3>Cut at the playhead</h3><p>Play your video and press ⌘B wherever you want a cut. It splits right there, even while it plays.</p></article>
-    <article><kbd>⌫</kbd><h3>Delete the bad bits</h3><p>Click a segment to select it (⌘ or ⇧-click for more), then press ⌫. Gone.</p></article>
-    <article><kbd>⌘</kbd><kbd>←</kbd><h3>Drag to reorder</h3><p>Drop a segment onto another to move it, or nudge the selected one with ⌘← and ⌘→.</p></article>
-    <article><kbd>⌘</kbd><kbd>S</kbd><h3>Saves in a blink</h3><p>Your edit is saved as “<i>name</i> edit.mov” next to the original. Nothing is re-encoded, so even long 4K videos save almost instantly.</p></article>
-    <article><kbd>⌘</kbd><kbd>O</kbd><h3>A whole batch at once</h3><p>Open several videos and they line up in the sidebar. Switch between them with ⌘[ and ⌘].</p></article>
-    <article><kbd class="wide">Right-click</kbd><h3>Right-click for the rest</h3><p>Rename a video or a clip, save the whole video, or save just one clip as its own file.</p></article>
-  </div>
-</section>
-
-<section class="shortcuts" id="shortcuts">
-  <h2>Keep your hands on the keyboard</h2>
-  <dl>
-    <div><dt><kbd>⌘</kbd><kbd>O</kbd></dt><dd>Open videos</dd></div>
-    <div><dt><kbd class="wide">Space</kbd></dt><dd>Play / pause</dd></div>
-    <div><dt><kbd>⌘</kbd><kbd>B</kbd></dt><dd>Cut at playhead</dd></div>
-    <div><dt><kbd>⌫</kbd></dt><dd>Delete selected segments</dd></div>
-    <div><dt><kbd>⌘</kbd><kbd>S</kbd></dt><dd>Save video</dd></div>
-    <div><dt><kbd>⌘</kbd><kbd>N</kbd></dt><dd>Save selected clip</dd></div>
-    <div><dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Step one frame</dd></div>
-    <div><dt><kbd>⇧</kbd><kbd>←</kbd><kbd>→</kbd></dt><dd>Jump one second</dd></div>
-    <div><dt><kbd class="wide">Tab</kbd></dt><dd>Next clip (⇧Tab for previous)</dd></div>
-    <div><dt><kbd>⌘</kbd><kbd>←</kbd><kbd>→</kbd></dt><dd>Move selected clip</dd></div>
-    <div><dt><kbd>⌘</kbd><kbd>[</kbd><kbd>]</kbd></dt><dd>Previous / next video</dd></div>
-  </dl>
-</section>
-
-<section class="download" id="download">
-  <h2>Build it in a minute</h2>
-  <p>QuickCut is built from source. You’ll need macOS 15 or later and Xcode.</p>
+<footer class="bottom">
   <div class="code">
-    <div class="code-bar"><span class="lights"><i></i><i></i><i></i></span><span>Terminal</span><button class="copy" id="copy" type="button">Copy</button></div>
-    <pre><code id="cmd">git clone https://github.com/fabiogiolito/quickcut.git
-cd quickcut
-./build.sh &amp;&amp; open QuickCut.app</code></pre>
+    <code id="cmd">git clone https://github.com/fabiogiolito/quickcut &amp;&amp; cd quickcut &amp;&amp; ./build.sh &amp;&amp; open QuickCut.app</code>
+    <button class="copy" id="copy" type="button">Copy</button>
   </div>
-  <p class="small">Then drag <b>QuickCut.app</b> into your Applications folder.</p>
-  <a class="btn primary" href="https://github.com/fabiogiolito/quickcut">Get the code on GitHub</a>
-</section>
-
-<footer class="foot">
-  <img src="icon.png" alt="" width="20" height="20">
-  <span>QuickCut by <a href="https://github.com/fabiogiolito">Fabio Giolito</a> · <a href="https://github.com/fabiogiolito/quickcut">GitHub</a></span>
+  <p class="keys"><kbd>⌘O</kbd> open <kbd>Space</kbd> play <kbd>⌘B</kbd> cut <kbd>⌫</kbd> delete <kbd>⌘S</kbd> save</p>
 </footer>
 
 <script src="demo.js"></script>
