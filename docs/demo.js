@@ -317,14 +317,20 @@ async function script() {
   key(['Space'], 'Play', $('#playBtn'));
   setPlaying(true);
   await playTo(2.4);
-  key(['⌘', 'B'], 'Cut at playhead', $('#cutBtn'));
-  cut();
-  await playTo(3.1);
   key(['Space'], 'Pause', $('#playBtn'));
   setPlaying(false);
   selectUnderPlayhead();
-  await wait(400);
-  // Click the trash button to delete the selected piece.
+  await wait(700);
+  key(['⌘', 'B'], 'Cut at playhead', $('#cutBtn'));
+  cut();
+  await wait(700);
+  // Select the new tail piece, then click the trash button to delete it.
+  const tail = segs[segs.length - 1];
+  await moveTo(center(els.get(tail.id)), 700);
+  await click();
+  sel = new Set([tail.id]);
+  t = startOf(idx(tail.id)) + (tail.end - tail.start) / 2;
+  await wait(500);
   await moveTo(center($('#delBtn')), 700);
   await click();
   say('Delete segment');
