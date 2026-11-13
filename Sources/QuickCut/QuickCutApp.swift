@@ -16,12 +16,34 @@ struct QuickCutApp: App {
                 Button("Save Video") { if let t = editor.take { editor.save(t) } }
                     .keyboardShortcut("s")
                     .disabled(editor.take == nil || editor.take?.progress != nil)
+                Button("Save Selected Clip") { editor.saveSelectedClips() }
+                    .keyboardShortcut("n").disabled(editor.selection.isEmpty)
+            }
+            CommandGroup(after: .sidebar) {
+                Button("Previous File") { editor.selectTake(-1) }.keyboardShortcut("[")
+                Button("Next File") { editor.selectTake(1) }.keyboardShortcut("]")
             }
             CommandMenu("Timeline") {
                 // Disabled while renaming so typing in the field doesn't trigger them.
                 let busy = editor.take == nil || editor.renaming != nil
                 Button(editor.isPlaying ? "Pause" : "Play") { editor.togglePlay() }
                     .keyboardShortcut(.space, modifiers: []).disabled(busy)
+                Button("Previous Frame") { editor.step(-1, bySecond: false) }
+                    .keyboardShortcut(.leftArrow, modifiers: []).disabled(busy)
+                Button("Next Frame") { editor.step(1, bySecond: false) }
+                    .keyboardShortcut(.rightArrow, modifiers: []).disabled(busy)
+                Button("Back 1 Second") { editor.step(-1, bySecond: true) }
+                    .keyboardShortcut(.leftArrow, modifiers: .shift).disabled(busy)
+                Button("Forward 1 Second") { editor.step(1, bySecond: true) }
+                    .keyboardShortcut(.rightArrow, modifiers: .shift).disabled(busy)
+                Button("Next Clip") { editor.selectClip(1) }
+                    .keyboardShortcut(.tab, modifiers: []).disabled(busy)
+                Button("Previous Clip") { editor.selectClip(-1) }
+                    .keyboardShortcut(.tab, modifiers: .shift).disabled(busy)
+                Button("Move Clip Left") { editor.moveSelected(-1) }
+                    .keyboardShortcut(.leftArrow, modifiers: .command).disabled(busy)
+                Button("Move Clip Right") { editor.moveSelected(1) }
+                    .keyboardShortcut(.rightArrow, modifiers: .command).disabled(busy)
                 Button("Cut at Playhead") { editor.cut() }
                     .keyboardShortcut("b").disabled(busy)
                 Button("Delete Selected Segments") { editor.deleteSelection() }
@@ -79,12 +101,22 @@ struct ContentView: View {
         .navigationTitle(editor.take?.name ?? "QuickCut")
         .frame(minWidth: 800, minHeight: 500)
         .onAppear {
-            // Bare-key menu shortcuts lose to the focused view (list, buttons), so catch space first.
+            // Bare-key/arrow menu shortcuts lose to the focused view (list, buttons), so catch them first.
             NSEvent.addLocalMonitorForEvents(matching: .keyDown) { e in
-                guard e.keyCode == 49, e.modifierFlags.intersection(.deviceIndependentFlagsMask).isEmpty,
-                      editor.take?.progress == nil, editor.take != nil, editor.renaming == nil,
+                // Arrow keys carry .numericPad/.function; ignore those.
+                let mods = e.modifierFlags.intersection(.deviceIndependentFlagsMask).subtracting([.numericPad, .function])
+                guard editor.take?.progress == nil, editor.take != nil, editor.renaming == nil,
                       !(NSApp.keyWindow?.firstResponder is NSText) else { return e }
-                editor.togglePlay()
+                switch (e.keyCode, mods) {
+                case (49, []): editor.togglePlay()
+                case (123, []), (123, .shift): editor.step(-1, bySecond: mods == .shift)
+                case (124, []), (124, .shift): editor.step(1, bySecond: mods == .shift)
+                case (123, .command): editor.moveSelected(-1)
+                case (124, .command): editor.moveSelected(1)
+                case (51, []), (117, []): editor.deleteSelection()
+                case (48, []), (48, .shift): editor.selectClip(mods == .shift ? -1 : 1)
+                default: return e
+                }
                 return nil
             }
         }
@@ -160,8 +192,8 @@ struct TimelineStrip: View {
                         ForEach(Array(segments.enumerated()), id: \.element.id) { i, seg in
                             segmentView(seg, index: i, width: seg.duration / total * w)
                                 .onTapGesture { loc in
+                                    editor.seek(segments.startTime(of: i) + loc.x / (seg.duration / total * w) * seg.duration, select: false)
                                     select(seg.id)
-                                    editor.seek(segments.startTime(of: i) + loc.x / (seg.duration / total * w) * seg.duration)
                                 }
                                 .draggable(seg.id.uuidString)
                                 .dropDestination(for: String.self) { items, _ in
