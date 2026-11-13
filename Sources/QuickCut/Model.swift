@@ -187,8 +187,14 @@ enum RenameTarget: Equatable {
         take.clipCount += 1
     }
 
+    /// At least one clip must remain.
+    var canDelete: Bool {
+        guard let take else { return false }
+        return !selection.isEmpty && take.segments.contains { !selection.contains($0.id) }
+    }
+
     func deleteSelection() {
-        guard let take, !selection.isEmpty else { return }
+        guard let take, canDelete else { return }
         take.segments.removeAll { selection.contains($0.id) }
         selection = []
         reload()

@@ -25,7 +25,7 @@ struct QuickCutApp: App {
                 Button("Cut at Playhead") { editor.cut() }
                     .keyboardShortcut("b").disabled(busy)
                 Button("Delete Selected Segments") { editor.deleteSelection() }
-                    .keyboardShortcut(.delete, modifiers: []).disabled(busy || editor.selection.isEmpty)
+                    .keyboardShortcut(.delete, modifiers: []).disabled(busy || !editor.canDelete)
             }
         }
     }
@@ -116,7 +116,7 @@ struct EditorView: View {
                 Spacer()
                 Button("Cut", systemImage: "scissors") { editor.cut() }.help("Cut at playhead (⌘B)")
                 Button("Delete", systemImage: "trash") { editor.deleteSelection() }
-                    .help("Delete selected segments (⌫)").disabled(editor.selection.isEmpty)
+                    .help("Delete selected segments (⌫)").disabled(!editor.canDelete)
             }
             .labelStyle(.iconOnly)
             .buttonStyle(.borderless)
@@ -165,6 +165,7 @@ struct TimelineStrip: View {
                                         if !editor.selection.contains(seg.id) { editor.selection = [seg.id] }
                                         editor.deleteSelection()
                                     }
+                                    .disabled(segments.count < 2)
                                     Divider()
                                     Button("Save Clip") { editor.saveClip(seg) }
                                 }
