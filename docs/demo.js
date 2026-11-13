@@ -118,6 +118,23 @@ function render() {
 }
 
 // ---- Helpers ----
+function rectIn(el) {
+  const r = el.getBoundingClientRect(), w = win.getBoundingClientRect();
+  return { x: (r.left - w.left) / scale, y: (r.top - w.top) / scale, w: r.width / scale, h: r.height / scale };
+}
+// A copy of the clip flies into the sidebar slot where its new file row is about to appear.
+async function flyToSidebar(el) {
+  const g = el.cloneNode(true), from = rectIn(el), last = rectIn(files.lastElementChild);
+  const place = (r) => Object.assign(g.style, { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' });
+  g.className = 'seg flyer';
+  place(from);
+  win.append(g);
+  void g.offsetWidth;
+  g.classList.add('go');
+  place({ x: last.x, y: last.y + last.h, w: last.w, h: last.h });
+  await wait(700);
+  g.remove();
+}
 function center(el) {
   const r = el.getBoundingClientRect(), w = win.getBoundingClientRect();
   return { x: (r.left + r.width / 2 - w.left) / scale, y: (r.top + r.height / 2 - w.top) / scale };
@@ -217,7 +234,7 @@ function reset() {
   hud.classList.remove('show');
   titleEl.textContent = 'QuickCut';
   win.classList.remove('open', 'reset');
-  win.querySelectorAll('.ghost').forEach((g) => g.remove());
+  win.querySelectorAll('.ghost, .flyer').forEach((g) => g.remove());
   win.querySelectorAll('.flash, .hi').forEach((e) => e.classList.remove('flash', 'hi'));
   menu.classList.remove('show');
   cursor.classList.remove('down');
@@ -266,6 +283,7 @@ async function script() {
   await wait(120);
   menu.classList.remove('show');
   item.classList.remove('hi');
+  await flyToSidebar(els.get(c2.id));
   const clipTake = await exportAs('Beach Trip Clip 2', c2.start, c2.end - c2.start);
   await wait(500);
 
