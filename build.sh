@@ -23,6 +23,8 @@ mkdir -p "$APP/Contents/Resources"
 xcrun actool QuickCut.icon --compile "$APP/Contents/Resources" --app-icon QuickCut \
   --platform macosx --minimum-deployment-target 15.0 \
   --output-partial-info-plist /dev/null >/dev/null
+# actool exits 0 even when it fails, so check it actually wrote the icon (v1.0.0 first shipped without one).
+[ -f "$APP/Contents/Resources/QuickCut.icns" ] || { echo "build: actool didn't compile QuickCut.icon" >&2; exit 1; }
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
