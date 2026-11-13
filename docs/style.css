@@ -55,11 +55,15 @@ kbd.wide { padding: 0 12px; font-size: 13px; }
 .pp svg { width: 14px; height: 14px; }
 .pp .pp-play, .pp.paused .pp-pause { display: none; }
 .pp.paused .pp-play { display: block; }
-#scrub { --v: 0%; flex: 1; height: 20px; appearance: none; -webkit-appearance: none; background: none; cursor: pointer; }
-#scrub::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--accent) var(--v), light-dark(rgba(0,0,0,.14), rgba(255,255,255,.18)) var(--v)); }
-#scrub::-moz-range-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--accent) var(--v), light-dark(rgba(0,0,0,.14), rgba(255,255,255,.18)) var(--v)); }
-#scrub::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 .5px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.3); }
-#scrub::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 0 0 .5px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.3); }
+/* Pill progress bar: the thumb is a fill-coloured dot whose shadow paints the played part. */
+#scrub { --fill: var(--accent); flex: 1; height: 12px; border-radius: 999px; overflow: hidden; cursor: pointer; appearance: none; -webkit-appearance: none;
+  background: light-dark(rgba(0,0,0,.1), rgba(255,255,255,.14)); }
+#scrub::-webkit-slider-runnable-track { height: 100%; background: none; }
+#scrub::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 100%; border-radius: 999px; background: var(--fill);
+  box-shadow: -100vw 0 0 calc(100vw - 6px) var(--fill); }
+#scrub::-moz-range-track { height: 100%; background: none; }
+#scrub::-moz-range-progress { height: 100%; border-radius: 999px; background: var(--fill); }
+#scrub::-moz-range-thumb { width: 12px; height: 100%; border: 0; border-radius: 999px; background: var(--fill); }
 
 /* While seeking the demo jumps straight to its state at that moment. */
 .demo.seeking *, .demo.seeking *::before, .demo.seeking *::after { transition: none !important; animation: none !important; }
