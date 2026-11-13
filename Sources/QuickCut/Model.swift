@@ -81,6 +81,7 @@ enum RenameTarget: Equatable {
     let player = AVPlayer()
     @ObservationIgnored private var timeObserver: Any?
     @ObservationIgnored private var reloadTask: Task<Void, Never>?
+    @ObservationIgnored private var frameDuration = 1.0 / 30
 
     var take: Take? { takes.first { $0.id == selectedTakeID } }
 
@@ -196,37 +197,68 @@ enum RenameTarget: Equatable {
     func deleteSelection() {
         guard let take, canDelete else { return }
         take.segments.removeAll { selection.contains($0.id) }
+        currentTime = min(currentTime, take.segments.duration)
         selection = []
+        selectUnderPlayhead()
         reload()
     }
 
+    /// Reorders; if the playhead is inside the moved clip it travels with it.
     func move(_ id: Segment.ID, to target: Segment.ID) {
-        take?.segments.move(id, to: target)
+        guard let take else { return }
+        let hit = take.segments.locate(currentTime)
+        let carried = hit.map { take.segments[$0.index].id == id } ?? false
+        take.segments.move(id, to: target)
+        if carried, let hit, let i = take.segments.firstIndex(where: { $0.id == id }) {
+            currentTime = take.segments.startTime(of: i) + hit.offset
+        }
         reload()
+    }
+
+    /// Swaps the single selected clip with its left (-1) or right (+1) neighbour.
+    func moveSelected(_ dir: Int) {
+        guard let take, selection.count == 1, let i = take.segments.firstIndex(where: { selection.contains($0.id) }),
+              take.segments.indices.contains(i + dir) else { return }
+        move(take.segments[i].id, to: take.segments[i + dir].id)
+    }
+
+    func saveSelectedClips() {
+        take?.segments.filter { selection.contains($0.id) }.forEach(saveClip)
+    }
+
+    /// ⌘[ / ⌘]: previous (-1) or next (+1) file in the sidebar.
+    func selectTake(_ dir: Int) {
+        guard let i = takes.firstIndex(where: { $0.id == selectedTakeID }), takes.indices.contains(i + dir) else { return }
+        selectedTakeID = takes[i + dir].id
+    }
+
+    private func selectUnderPlayhead() {
+        guard let take, let (i, _) = take.segments.locate(currentTime) else { return }
+        selection = [take.segments[i].id]
     }
 
     // MARK: Playback
 
     func togglePlay() {
-        if player.rate != 0 { player.pause() } else {
+        if player.rate != 0 { player.pause(); selectUnderPlayhead() } else {
             if let take, currentTime >= take.segments.duration - 0.05 { seek(0) }
             player.play()
         }
         isPlaying = player.rate != 0
     }
 
-    /// Frame step (pauses), or ⇧ for a 1-second jump.
+    /// Pauses, then moves one frame, or one second with ⇧.
     func step(_ dir: Int, bySecond: Bool) {
         guard let take else { return }
-        if bySecond {
-            seek(min(max(currentTime + Double(dir), 0), take.segments.duration))
-        } else {
-            player.currentItem?.step(byCount: dir)
-        }
+        player.pause()
+        isPlaying = false
+        seek(min(max(currentTime + Double(dir) * (bySecond ? 1 : frameDuration), 0), take.segments.duration))
     }
 
-    func seek(_ t: Double) {
+    /// While paused, the clip under the playhead becomes the selection unless `select` is false.
+    func seek(_ t: Double, select: Bool = true) {
         currentTime = t
+        if select, player.rate == 0 { selectUnderPlayhead() }
         player.seek(to: CMTime(seconds: t, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
     }
 
@@ -239,9 +271,11 @@ enum RenameTarget: Equatable {
         reloadTask = Task {
             do {
                 let comp = try await Self.composition(url: url, segments: segments)
+                let fps = try await AVURLAsset(url: url).loadTracks(withMediaType: .video).first?.load(.nominalFrameRate) ?? 0
                 guard !Task.isCancelled else { return }
+                if fps > 0 { frameDuration = 1 / Double(fps) }
                 player.replaceCurrentItem(with: AVPlayerItem(asset: comp))
-                seek(t)
+                seek(t, select: false)
             } catch {
                 self.error = error.localizedDescription
             }
