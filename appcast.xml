@@ -2,5 +2,18 @@
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
     <title>QuickCut</title>
+    <item>
+      <title>1.0.0</title>
+      <pubDate>Fri, 13 Nov 2026 14:19:12 +0000</pubDate>
+      <sparkle:version>1</sparkle:version>
+      <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <description sparkle:format="markdown"><![CDATA[First release of QuickCut, a tiny Mac app for quick video edits.
+
+- Open videos, cut at the playhead, delete the parts you don't want and drag the rest into order
+- Save the whole edit, or right-click any clip to save it as its own file
+- Nothing is re-encoded, so even long 4K videos save almost instantly]]></description>
+      <enclosure url="https://github.com/fabiogiolito/quickcut/releases/download/v1.0.0/QuickCut-1.0.0.zip" sparkle:edSignature="Pum7pMLVBqg9sl7DT4aRCryQDwVfrwsqfKgKLtJ0i39mW6G2rMZcSv5b93UhNl844nXjnqe5Xkha74iFqCM0CA==" length="1293590" type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>

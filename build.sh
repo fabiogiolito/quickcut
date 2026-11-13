@@ -6,7 +6,7 @@ set -e
 cd "$(dirname "$0")"
 # scripts/release.sh bumps these.
 MARKETING_VERSION=1.0.0
-CURRENT_PROJECT_VERSION=0
+CURRENT_PROJECT_VERSION=1
 CONFIG=debug
 [ "$1" = --release ] && CONFIG=release
 swift build -c $CONFIG >&2
