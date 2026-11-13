@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QuickCut: save clips and edit videos on your Mac</title>
-<meta name="description" content="QuickCut: save clips and edit videos. A tiny native video cutter for macOS.">
+<meta name="description" content="QuickCut is a tiny Mac app for quick video edits: cut at the playhead, delete what you don't want, reorder, and save the edit or single clips.">
 <meta name="color-scheme" content="light dark">
 <meta property="og:title" content="QuickCut">
 <meta property="og:description" content="Save clips and edit videos. A tiny native video cutter for macOS.">
@@ -17,69 +17,75 @@
 
 <header class="top">
   <a class="brand" href="./"><img src="icon.png" alt="" width="28" height="28">QuickCut</a>
-  <a class="gh" href="https://github.com/fabiogiolito/quickcut"><svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg><span>GitHub</span></a>
 </header>
 
 <main class="hero">
-  <h1>Save clips and edit videos</h1>
-  <p class="tagline">A tiny, native video cutter for macOS 15+</p>
-  <div class="stage" id="stage" role="img" aria-label="QuickCut window: a video is opened, played and cut into three clips with Command-B. One clip is right-clicked and saved as a new file in the sidebar, another is dragged to reorder it, then the saved clip is opened, cut again, its end deleted with Delete, and saved with Command-S.">
-    <div class="win" id="win" aria-hidden="true">
-      <span class="lights"><i></i><i></i><i></i></span>
-      <aside class="side">
-        <div class="side-bar">
-          <svg class="ico" viewBox="0 0 20 16"><rect x="1" y="1.5" width="18" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M7 2v12" stroke="currentColor" stroke-width="1.4"/></svg>
-          <svg class="ico plus" viewBox="0 0 16 16"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        </div>
-        <ul class="files" id="files"></ul>
-      </aside>
-      <section class="main">
-        <header class="titlebar"><span id="title">QuickCut</span></header>
-        <div class="empty" id="empty">
-          <svg viewBox="0 0 24 24" width="44" height="44"><rect x="3" y="4" width="18" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4" stroke="currentColor" stroke-width="1.5"/></svg>
-          <b>No Video</b>
-          <span>Press ⌘O to open one or more videos.</span>
-        </div>
-        <div class="editor" id="editor">
-          <div class="player">
-            <div class="frame" id="frame">
-              <div class="scene sunset"><i class="sun"></i><i class="sea"></i><i class="glint"></i></div>
-              <div class="scene ocean"><i class="boat"></i><i class="wave w1"></i><i class="wave w2"></i><i class="wave w3"></i></div>
-              <div class="scene meadow"><i class="sun"></i><i class="hill h1"></i><i class="hill h2"></i><i class="tree"></i></div>
+  <div class="copy">
+    <img class="app-icon" src="icon.png" alt="QuickCut app icon" width="88" height="88">
+    <h1>Save clips and edit videos</h1>
+    <p>QuickCut is a tiny Mac app for quick video edits. Open a video, cut it at the playhead, delete the parts you don’t want and drag the rest into order.</p>
+    <p>Save the whole edit, or right-click any clip to save it as its own file. Nothing is re-encoded, so even long 4K videos save almost instantly.</p>
+    <a class="btn" href="https://github.com/fabiogiolito/quickcut"><svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>Get it on GitHub</a>
+    <p class="req">Native SwiftUI app · macOS 15 or later</p>
+  </div>
+
+  <div class="demo" id="demo">
+    <div class="stage" id="stage" role="img" aria-label="QuickCut window: a video is opened, played and cut into three clips with Command-B. One clip is right-clicked and saved as a new file in the sidebar, another is dragged to reorder it, then the saved clip is opened, cut again, its end deleted with Delete, and saved with Command-S.">
+      <div class="win" id="win" aria-hidden="true">
+        <span class="lights"><i></i><i></i><i></i></span>
+        <aside class="side">
+          <div class="side-bar">
+            <svg class="ico" viewBox="0 0 20 16"><rect x="1" y="1.5" width="18" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M7 2v12" stroke="currentColor" stroke-width="1.4"/></svg>
+            <svg class="ico plus" viewBox="0 0 16 16"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <ul class="files" id="files"></ul>
+        </aside>
+        <section class="main">
+          <header class="titlebar"><span id="title">QuickCut</span></header>
+          <div class="empty" id="empty">
+            <svg viewBox="0 0 24 24" width="44" height="44"><rect x="3" y="4" width="18" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4" stroke="currentColor" stroke-width="1.5"/></svg>
+            <b>No Video</b>
+            <span>Press ⌘O to open one or more videos.</span>
+          </div>
+          <div class="editor" id="editor">
+            <div class="player">
+              <div class="frame" id="frame">
+                <div class="scene sunset"><i class="sun"></i><i class="sea"></i><i class="glint"></i></div>
+                <div class="scene ocean"><i class="boat"></i><i class="wave w1"></i><i class="wave w2"></i><i class="wave w3"></i></div>
+                <div class="scene meadow"><i class="sun"></i><i class="hill h1"></i><i class="hill h2"></i><i class="tree"></i></div>
+              </div>
+            </div>
+            <div class="controls">
+              <span class="cbtn" id="playBtn">
+                <svg class="i-play" viewBox="0 0 16 16"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor"/></svg>
+                <svg class="i-pause" viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/></svg>
+              </span>
+              <span class="time" id="time">0:00.00 / 0:12.00</span>
+              <span class="grow"></span>
+              <span class="cbtn" id="cutBtn"><svg viewBox="0 0 16 16"><circle cx="4" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5.6 10.4 12.5 1.5M10.4 10.4 3.5 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+              <span class="cbtn" id="delBtn"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></span>
+            </div>
+            <div class="timeline">
+              <div class="scrub"></div>
+              <div class="segs" id="segs"></div>
+              <div class="playhead" id="ph"></div>
             </div>
           </div>
-          <div class="controls">
-            <span class="cbtn" id="playBtn">
-              <svg class="i-play" viewBox="0 0 16 16"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor"/></svg>
-              <svg class="i-pause" viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/></svg>
-            </span>
-            <span class="time" id="time">0:00.00 / 0:12.00</span>
-            <span class="grow"></span>
-            <span class="cbtn" id="cutBtn"><svg viewBox="0 0 16 16"><circle cx="4" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5.6 10.4 12.5 1.5M10.4 10.4 3.5 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
-            <span class="cbtn" id="delBtn"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></span>
-          </div>
-          <div class="timeline">
-            <div class="scrub"></div>
-            <div class="segs" id="segs"></div>
-            <div class="playhead" id="ph"></div>
-          </div>
-        </div>
-      </section>
-      <div class="menu" id="menu"><div>Rename…</div><div>Delete</div><hr><div id="saveClipItem">Save Clip</div></div>
-      <svg class="cursor" id="cursor" viewBox="0 0 24 24" width="24" height="24"><path d="M5 2.5v17.2l4.4-4.2 2.9 6.6 2.7-1.2-2.9-6.4h6.1z" fill="#000" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </section>
+        <div class="menu" id="menu"><div>Rename…</div><div>Delete</div><hr><div id="saveClipItem">Save Clip</div></div>
+        <svg class="cursor" id="cursor" viewBox="0 0 24 24" width="24" height="24"><path d="M5 2.5v17.2l4.4-4.2 2.9 6.6 2.7-1.2-2.9-6.4h6.1z" fill="#000" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div class="hud" id="hud" aria-hidden="true"></div>
+    <div class="track">
+      <button class="pp" id="pp" type="button" aria-label="Pause demo">
+        <svg class="pp-pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/></svg>
+        <svg class="pp-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z" fill="currentColor"/></svg>
+      </button>
+      <input type="range" id="scrub" min="0" max="1000" step="10" value="0" aria-label="Seek through the demo">
     </div>
   </div>
-  </div>
-  <div class="hud" id="hud" aria-hidden="true"></div>
 </main>
-
-<footer class="bottom">
-  <div class="code">
-    <code id="cmd">git clone https://github.com/fabiogiolito/quickcut &amp;&amp; cd quickcut &amp;&amp; ./build.sh &amp;&amp; open QuickCut.app</code>
-    <button class="copy" id="copy" type="button">Copy</button>
-  </div>
-  <p class="keys"><kbd>⌘O</kbd> open <kbd>Space</kbd> play <kbd>⌘B</kbd> cut <kbd>⌫</kbd> delete <kbd>⌘S</kbd> save</p>
-</footer>
 
 <script src="demo.js"></script>
 </body>

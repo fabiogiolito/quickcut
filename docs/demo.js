@@ -1,8 +1,11 @@
-// QuickCut demo: a scripted, looping recreation of the app window.
-// Times in the "video" are seconds; playback runs at SPEED× so the loop stays short.
+// QuickCut demo: a scripted recreation of the app window, driven by a virtual clock so it can be
+// paused and seeked. Every wait in the script goes through wait(); seeking replays the script
+// instantly up to the target time (with CSS transitions off), then normal playback resumes.
+// Video times are seconds; playback runs at SPEED× so the loop stays short.
 const $ = (s) => document.querySelector(s);
-const stage = $('#stage'), win = $('#win'), segsEl = $('#segs'), ph = $('#ph'), frame = $('#frame'),
-  timeEl = $('#time'), files = $('#files'), titleEl = $('#title'), hud = $('#hud'), cursor = $('#cursor'), menu = $('#menu');
+const demo = $('#demo'), stage = $('#stage'), win = $('#win'), segsEl = $('#segs'), ph = $('#ph'), frame = $('#frame'),
+  timeEl = $('#time'), files = $('#files'), titleEl = $('#title'), hud = $('#hud'), cursor = $('#cursor'), menu = $('#menu'),
+  scrub = $('#scrub'), pp = $('#pp');
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SPEED = 2;
 const SHOTS = [[0, 3, 'sunset'], [3, 7, 'ocean'], [7, 12, 'meadow']];
@@ -11,11 +14,12 @@ const FILM = '<svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="
 let scale = 1, takes = [], cur = null, segs = [], t = 0, playing = false, sel = new Set();
 const els = new Map();
 
-// Layout: fixed design size, scaled to fit the stage's width and height, centred.
+// Layout: fixed design size, scaled to fit the stage, centred. Narrow stages get a smaller window.
 function layout() {
-  const w = stage.clientWidth, h = stage.clientHeight, compact = w < 640;
+  const w = stage.clientWidth, compact = w < 640;
   const W = compact ? 580 : 900, H = compact ? 440 : 560;
   stage.style.aspectRatio = `${W} / ${H}`;
+  const h = stage.clientHeight;
   scale = Math.min(w / W, h / H);
   win.classList.toggle('compact', compact);
   Object.assign(win.style, { width: W + 'px', height: H + 'px',
@@ -24,8 +28,46 @@ function layout() {
 new ResizeObserver(layout).observe(stage);
 layout();
 
-// Model, mirroring Model.swift. A take's `src` is where its file starts in the shared source footage.
+// ---- Virtual clock ----
+let now = 0, timers = [], END = 0, demoPlaying = !reduce, busy = false, seekTarget = null;
+const wait = (ms) => new Promise((r) => timers.push({ at: now + ms, r }));
+const later = (ms, fn) => wait(ms).then(fn);
+// Run every timer due by `to`, letting the script's continuations register their next wait.
+async function advance(to) {
+  for (;;) {
+    timers.sort((a, b) => a.at - b.at);
+    const next = timers[0];
+    if (!next || next.at > to) break;
+    timers.shift();
+    now = next.at;
+    next.r();
+    for (let i = 0; i < 30; i++) await null;
+  }
+  if (to !== Infinity) now = to;
+}
+async function seekTo(to) {
+  demo.classList.add('seeking');
+  if (to < now) { timers = []; now = 0; script(); }
+  await advance(to);
+  void win.offsetWidth;
+  demo.classList.remove('seeking');
+}
+function requestSeek(to) {
+  seekTarget = to;
+  if (busy) return;
+  busy = true;
+  (async () => {
+    while (seekTarget !== null) { const s = seekTarget; seekTarget = null; await seekTo(s); }
+    busy = false;
+  })();
+}
+
+// ---- Model, mirroring Model.swift. A take's `src` is where its file starts in the source footage. ----
+let playT0 = 0, playV0 = 0;
 const total = () => segs.reduce((a, s) => a + s.end - s.start, 0);
+function syncT() { if (playing) t = Math.min(playT0 + ((now - playV0) / 1000) * SPEED, total()); }
+function setPlaying(on) { syncT(); playing = on; playT0 = t; playV0 = now; }
+async function playTo(x) { syncT(); await wait(((x - t) / SPEED) * 1000); syncT(); }
 const startOf = (i) => segs.slice(0, i).reduce((a, s) => a + s.end - s.start, 0);
 const idx = (id) => segs.findIndex((s) => s.id === id);
 function locate(time) {
@@ -53,6 +95,7 @@ function segEl(s, after) {
 }
 
 function render() {
+  syncT();
   const tot = total();
   ph.style.left = (tot ? (t / tot) * 100 : 0) + '%';
   timeEl.textContent = `${fmt(t)} / ${fmt(tot)}`;
@@ -66,20 +109,15 @@ function render() {
   win.classList.toggle('playing', playing);
   els.forEach((el, id) => el.classList.toggle('sel', sel.has(id)));
   $('#delBtn').classList.toggle('off', !sel.size || sel.size >= segs.length);
+  if (END) {
+    if (!dragging) scrub.value = Math.min(now, END);
+    scrub.style.setProperty('--v', (Math.min(now, END) / END) * 100 + '%');
+  }
+  pp.classList.toggle('paused', !demoPlaying);
+  pp.setAttribute('aria-label', demoPlaying ? 'Pause demo' : 'Play demo');
 }
 
-let last = performance.now();
-function tick(now) {
-  const dt = Math.min(now - last, 50) / 1000;
-  last = now;
-  if (playing) t = Math.min(t + dt * SPEED, total());
-  render();
-  requestAnimationFrame(tick);
-}
-
-// Helpers
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const until = (fn) => new Promise((r) => { const c = () => (fn() ? r() : requestAnimationFrame(c)); c(); });
+// ---- Helpers ----
 function center(el) {
   const r = el.getBoundingClientRect(), w = win.getBoundingClientRect();
   return { x: (r.left + r.width / 2 - w.left) / scale, y: (r.top + r.height / 2 - w.top) / scale };
@@ -88,19 +126,19 @@ async function moveTo({ x, y }, ms = 600, ghost) {
   for (const el of [cursor, ghost]) if (el) el.style.setProperty('--d', ms + 'ms');
   cursor.style.left = x + 'px'; cursor.style.top = y + 'px';
   if (ghost) { ghost.style.left = x - ghost.offsetWidth / 2 + 'px'; ghost.style.top = y - ghost.offsetHeight / 2 + 'px'; }
-  await sleep(ms);
+  await wait(ms);
 }
-async function click() { cursor.classList.add('down'); await sleep(120); cursor.classList.remove('down'); }
+async function click() { cursor.classList.add('down'); await wait(120); cursor.classList.remove('down'); }
 function key(keys, label, btn) {
   hud.classList.remove('show');
   hud.innerHTML = keys.map((k) => `<kbd${k.length > 1 ? ' class="wide"' : ''}>${k}</kbd>`).join('') + `<span>${label}</span>`;
   void hud.offsetWidth;
   hud.classList.add('show');
-  if (btn) { btn.classList.add('flash'); setTimeout(() => btn.classList.remove('flash'), 250); }
+  if (btn) { btn.classList.add('flash'); later(250, () => btn.classList.remove('flash')); }
 }
 const say = (label) => key([], label);
 
-// Actions, same rules as the app
+// ---- Actions, same rules as the app ----
 function addTake(name, src, dur) {
   const tk = { name, src, segs: [seg(1, 0, dur)], clipCount: 1, row: document.createElement('li') };
   tk.row.innerHTML = FILM + `<span>${name}</span>`;
@@ -122,11 +160,14 @@ async function exportAs(name, src, dur) {
   const tk = addTake(name, src, dur);
   tk.row.insertAdjacentHTML('beforeend', '<svg class="ring" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-width="2"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="37.7" stroke-dashoffset="37.7" transform="rotate(-90 8 8)" style="transition:stroke-dashoffset 1s linear"/></svg>');
   const ring = tk.row.querySelector('.ring');
-  if (!reduce) { await sleep(50); ring.lastChild.style.strokeDashoffset = 0; await sleep(1100); }
+  await wait(50);
+  ring.lastChild.style.strokeDashoffset = 0;
+  await wait(1100);
   ring.remove();
   return tk;
 }
 function cut() {
+  syncT();
   const hit = locate(t);
   if (!hit) return;
   const left = segs[hit.i], right = seg(++cur.clipCount, left.start + hit.off, left.end);
@@ -140,9 +181,9 @@ function cut() {
   void rel.offsetWidth;
   lel.style.transition = rel.style.transition = '';
   rel.classList.add('cutflash');
-  setTimeout(() => rel.classList.remove('cutflash'), 700);
+  later(700, () => rel.classList.remove('cutflash'));
 }
-function selectUnderPlayhead() { const h = locate(t); sel = new Set(h ? [segs[h.i].id] : []); }
+function selectUnderPlayhead() { syncT(); const h = locate(t); sel = new Set(h ? [segs[h.i].id] : []); }
 function del() {
   if (!sel.size || sel.size >= segs.length) return;
   for (const id of sel) {
@@ -150,14 +191,14 @@ function del() {
     el.classList.add('gone');
     el.style.flexGrow = 0;
     els.delete(id);
-    setTimeout(() => el.remove(), 400);
+    later(400, () => el.remove());
   }
   segs = segs.filter((s) => !sel.has(s.id));
   t = Math.min(t, total());
-  sel = new Set();
   selectUnderPlayhead();
 }
 function move(id, target) {
+  syncT();
   const before = new Map([...els].map(([k, el]) => [k, el.getBoundingClientRect().left]));
   const hit = locate(t), carried = hit && segs[hit.i].id === id;
   segs.splice(idx(target), 0, segs.splice(idx(id), 1)[0]);
@@ -171,38 +212,42 @@ function move(id, target) {
   });
 }
 function reset() {
-  takes = []; cur = null; segs = []; sel = new Set(); t = 0; playing = false;
+  takes = []; cur = null; segs = []; sel = new Set(); t = 0; playing = false; nextId = 1;
   els.clear(); segsEl.innerHTML = ''; files.innerHTML = ''; hud.innerHTML = '';
+  hud.classList.remove('show');
   titleEl.textContent = 'QuickCut';
-  win.classList.remove('open');
+  win.classList.remove('open', 'reset');
+  win.querySelectorAll('.ghost').forEach((g) => g.remove());
+  win.querySelectorAll('.flash, .hi').forEach((e) => e.classList.remove('flash', 'hi'));
   menu.classList.remove('show');
+  cursor.classList.remove('down');
+  cursor.classList.add('hidden');
 }
 
-async function run() {
+// ---- The script ----
+async function script() {
   reset();
-  cursor.classList.add('hidden');
   await moveTo({ x: win.offsetWidth * 0.7, y: win.offsetHeight * 0.45 }, 0);
-  win.classList.remove('reset');
-  await sleep(1000);
+  await wait(900);
 
   // Open, play, cut into three clips.
   key(['⌘', 'O'], 'Open video');
-  await sleep(350);
+  await wait(350);
   showTake(addTake('Beach Trip', 0, 12));
-  await sleep(1100);
+  await wait(1100);
   key(['Space'], 'Play', $('#playBtn'));
-  playing = true;
-  await until(() => t >= 3);
+  setPlaying(true);
+  await playTo(3);
   key(['⌘', 'B'], 'Cut at playhead', $('#cutBtn'));
   cut();
-  await until(() => t >= 7);
+  await playTo(7);
   key(['⌘', 'B'], 'Cut at playhead', $('#cutBtn'));
   cut();
-  await until(() => t >= 8.6);
+  await playTo(8.6);
   key(['Space'], 'Pause', $('#playBtn'));
-  playing = false;
+  setPlaying(false);
   selectUnderPlayhead();
-  await sleep(700);
+  await wait(700);
 
   // Right-click Clip 2 → Save Clip: it lands in the sidebar as its own file.
   const [c1, c2, c3] = segs;
@@ -213,16 +258,16 @@ async function run() {
   const p = center(els.get(c2.id));
   Object.assign(menu.style, { left: p.x + 'px', top: p.y - 92 + 'px' });
   menu.classList.add('show');
-  await sleep(500);
+  await wait(500);
   const item = $('#saveClipItem');
   await moveTo(center(item), 450);
   item.classList.add('hi');
   await click();
-  await sleep(120);
+  await wait(120);
   menu.classList.remove('show');
   item.classList.remove('hi');
   const clipTake = await exportAs('Beach Trip Clip 2', c2.start, c2.end - c2.start);
-  await sleep(500);
+  await wait(500);
 
   // Drag Clip 3 onto Clip 1 to swap their order.
   const el3 = els.get(c3.id), ghost = el3.cloneNode(true);
@@ -236,65 +281,79 @@ async function run() {
   await moveTo(center(el3), 0, ghost);
   el3.classList.add('lifted');
   say('Drag to reorder');
-  await sleep(150);
+  await wait(150);
   const strip = segsEl.getBoundingClientRect(), w0 = win.getBoundingClientRect();
   await moveTo({ x: (strip.left - w0.left) / scale + ghost.offsetWidth / 2, y: center(el3).y }, 900, ghost); // drop over Clip 1
   cursor.classList.remove('down');
   ghost.remove();
   el3.classList.remove('lifted');
   move(c3.id, c1.id);
-  await sleep(1000);
+  await wait(1000);
 
   // Open the saved clip from the sidebar, trim its end off.
   await moveTo(center(clipTake.row), 800);
   await click();
   say('Open the saved clip');
   showTake(clipTake);
-  await sleep(1000);
+  await wait(1000);
   key(['Space'], 'Play', $('#playBtn'));
-  playing = true;
-  await until(() => t >= 2.4);
+  setPlaying(true);
+  await playTo(2.4);
   key(['⌘', 'B'], 'Cut at playhead', $('#cutBtn'));
   cut();
-  await until(() => t >= 3.1);
+  await playTo(3.1);
   key(['Space'], 'Pause', $('#playBtn'));
-  playing = false;
+  setPlaying(false);
   selectUnderPlayhead();
-  await sleep(800);
+  await wait(800);
   key(['⌫'], 'Delete segment', $('#delBtn'));
   del();
-  await sleep(1200);
+  await wait(1200);
 
   // Save.
   await moveTo({ x: win.offsetWidth * 0.62, y: win.offsetHeight * 0.4 }, 600);
   cursor.classList.add('hidden');
   key(['⌘', 'S'], 'Save “Beach Trip Clip 2 edit.mov”');
   await exportAs('Beach Trip Clip 2 edit', clipTake.src, total());
-  await sleep(2400);
-
+  await wait(2400);
   win.classList.add('reset');
-  await sleep(450);
+  await wait(450);
 }
 
-$('#copy').addEventListener('click', async (e) => {
-  try { await navigator.clipboard.writeText($('#cmd').textContent); e.target.textContent = 'Copied'; }
-  catch { e.target.textContent = 'Select & copy'; }
-  setTimeout(() => (e.target.textContent = 'Copy'), 1600);
+// ---- Playback driver ----
+let last = performance.now();
+function tick(ts) {
+  const dt = Math.min(ts - last, 50);
+  last = ts;
+  if (demoPlaying && !busy) {
+    if (now >= END) requestSeek(0);
+    else { busy = true; advance(Math.min(now + dt, END)).then(() => (busy = false)); }
+  }
+  render();
+  requestAnimationFrame(tick);
+}
+
+let wasPlaying = false, dragging = false;
+scrub.addEventListener('pointerdown', () => { dragging = true; wasPlaying = demoPlaying; demoPlaying = false; });
+addEventListener('pointerup', () => { dragging = false; });
+scrub.addEventListener('input', () => requestSeek(+scrub.value));
+scrub.addEventListener('change', () => { if (wasPlaying) demoPlaying = true; wasPlaying = false; });
+pp.addEventListener('click', () => {
+  demoPlaying = !demoPlaying;
+  if (demoPlaying && now >= END) requestSeek(0);
 });
 
-if (reduce) {
-  // Static frame: the finished edit, no motion.
-  showTake(addTake('Beach Trip', 0, 12));
-  t = 3; cut(); t = 7; cut();
-  const [c1, c2, c3] = segs;
-  addTake('Beach Trip Clip 2', 3, 4);
-  addTake('Beach Trip Clip 2 edit', 3, 2.4);
-  move(c3.id, c1.id);
-  t = 1.2;
-  cursor.classList.add('hidden');
-  hud.innerHTML = '<span>Cut, delete, reorder, save. That’s it.</span>';
-  render();
-} else {
+// Measure the script once (instantly), then start: from the top, or on the finished edit if motion is reduced.
+(async () => {
+  busy = true;
+  demo.classList.add('seeking');
+  script();
+  await advance(Infinity);
+  END = now;
+  scrub.max = END;
+  demo.classList.remove('seeking');
+  busy = false;
+  if (reduce) requestSeek(END - 1500); // the finished edit, before the loop fades out
+  else requestSeek(0);
   requestAnimationFrame(tick);
-  (async () => { for (;;) await run(); })();
-}
+})();
