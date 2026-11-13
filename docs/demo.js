@@ -65,8 +65,11 @@ function requestSeek(to) {
 // ---- Model, mirroring Model.swift. A take's `src` is where its file starts in the source footage. ----
 let playT0 = 0, playV0 = 0;
 const total = () => segs.reduce((a, s) => a + s.end - s.start, 0);
-function syncT() { if (playing) t = Math.min(playT0 + ((now - playV0) / 1000) * SPEED, total()); }
-function setPlaying(on) { syncT(); playing = on; playT0 = t; playV0 = now; }
+// The playhead moves at `rate` video-seconds per second: SPEED while playing, anything while being dragged.
+let rate = 0;
+function syncT() { if (rate) t = Math.max(0, Math.min(playT0 + ((now - playV0) / 1000) * rate, total())); }
+function setRate(r) { syncT(); rate = r; playT0 = t; playV0 = now; }
+function setPlaying(on) { setRate(on ? SPEED : 0); playing = on; }
 async function playTo(x) { syncT(); await wait(((x - t) / SPEED) * 1000); syncT(); }
 const startOf = (i) => segs.slice(0, i).reduce((a, s) => a + s.end - s.start, 0);
 const idx = (id) => segs.findIndex((s) => s.id === id);
@@ -140,8 +143,8 @@ function center(el) {
   const r = el.getBoundingClientRect(), w = win.getBoundingClientRect();
   return { x: (r.left + r.width / 2 - w.left) / scale, y: (r.top + r.height / 2 - w.top) / scale };
 }
-async function moveTo({ x, y }, ms = 600, ghost) {
-  for (const el of [cursor, ghost]) if (el) el.style.setProperty('--d', ms + 'ms');
+async function moveTo({ x, y }, ms = 600, ghost, ease = '') {
+  for (const el of [cursor, ghost]) if (el) { el.style.setProperty('--d', ms + 'ms'); el.style.setProperty('--ease', ease || null); }
   cursor.style.left = x + 'px'; cursor.style.top = y + 'px';
   if (ghost) { ghost.style.left = x - ghost.offsetWidth / 2 + 'px'; ghost.style.top = y - ghost.offsetHeight / 2 + 'px'; }
   await wait(ms);
@@ -155,6 +158,23 @@ function key(keys, label, btn) {
   if (btn) { btn.classList.add('flash'); later(250, () => btn.classList.remove('flash')); }
 }
 const say = (label) => key([], label);
+// Grab the playhead on the scrub bar and drag it to `to`; the video follows the cursor.
+function scrubPos(time) { const r = rectIn($('.scrub')); return { x: r.x + (r.w * time) / total(), y: r.y + r.h / 2 }; }
+async function dragPlayhead(to, ms) {
+  await moveTo(scrubPos(t), 700);
+  cursor.classList.add('down');
+  win.classList.add('scrubbing');
+  say('Drag the playhead');
+  await wait(150);
+  setRate((to - t) / (ms / 1000));
+  await moveTo(scrubPos(to), ms, null, 'linear');
+  setRate(0);
+  t = to;
+  selectUnderPlayhead(); // seeking selects the clip under the playhead, like the app
+  await wait(100);
+  cursor.classList.remove('down');
+  win.classList.remove('scrubbing');
+}
 async function clickButton(btn, label) {
   await moveTo(center(btn), 700);
   await click();
@@ -173,7 +193,7 @@ function addTake(name, src, dur) {
 }
 function showTake(tk) {
   if (cur) cur.segs = segs;
-  cur = tk; segs = tk.segs; t = 0; sel = new Set(); playing = false;
+  cur = tk; segs = tk.segs; t = 0; sel = new Set(); playing = false; rate = 0;
   els.clear(); segsEl.innerHTML = '';
   segs.forEach((s) => segEl(s));
   takes.forEach((x) => x.row.classList.toggle('on', x === tk));
@@ -237,11 +257,11 @@ function move(id, target) {
   });
 }
 function reset() {
-  takes = []; cur = null; segs = []; sel = new Set(); t = 0; playing = false; nextId = 1;
+  takes = []; cur = null; segs = []; sel = new Set(); t = 0; playing = false; rate = 0; nextId = 1;
   els.clear(); segsEl.innerHTML = ''; files.innerHTML = ''; hud.innerHTML = '';
   hud.classList.remove('show');
   titleEl.textContent = 'QuickCut';
-  win.classList.remove('open', 'reset');
+  win.classList.remove('open', 'reset', 'scrubbing');
   win.querySelectorAll('.ghost, .flyer').forEach((g) => g.remove());
   win.querySelectorAll('.flash, .hi').forEach((e) => e.classList.remove('flash', 'hi'));
   menu.classList.remove('show');
@@ -255,24 +275,20 @@ async function script() {
   await moveTo({ x: win.offsetWidth * 0.7, y: win.offsetHeight * 0.45 }, 0);
   await wait(900);
 
-  // Open, play, cut into three clips.
+  // Open, then scrub and cut into three clips.
   key(['⌘', 'O'], 'Open video');
   await wait(350);
   showTake(addTake('Beach Trip', 0, 12));
-  await wait(1100);
-  key(['Space'], 'Play', $('#playBtn'));
-  setPlaying(true);
-  await playTo(3);
-  key(['⌘', 'B'], 'Cut at playhead', $('#cutBtn'));
-  cut();
-  await playTo(7);
-  key(['⌘', 'B'], 'Cut at playhead', $('#cutBtn'));
-  cut();
-  await playTo(8.6);
-  key(['Space'], 'Pause', $('#playBtn'));
-  setPlaying(false);
-  selectUnderPlayhead();
-  await wait(700);
+  await wait(800);
+  // Scrub to where the shot changes and cut there, twice.
+  cursor.classList.remove('hidden');
+  for (const at of [3, 7]) {
+    await dragPlayhead(at, 1300);
+    await wait(250);
+    await clickButton($('#cutBtn'), 'Cut at playhead');
+    cut();
+    await wait(500);
+  }
 
   // Right-click Clip 2 → Save Clip: it lands in the sidebar as its own file.
   const [c1, c2, c3] = segs;
