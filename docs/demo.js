@@ -155,6 +155,13 @@ function key(keys, label, btn) {
   if (btn) { btn.classList.add('flash'); later(250, () => btn.classList.remove('flash')); }
 }
 const say = (label) => key([], label);
+async function clickButton(btn, label) {
+  await moveTo(center(btn), 700);
+  await click();
+  say(label);
+  btn.classList.add('flash');
+  later(250, () => btn.classList.remove('flash'));
+}
 
 // ---- Actions, same rules as the app ----
 function addTake(name, src, dur) {
@@ -321,17 +328,13 @@ async function script() {
   key(['Space'], 'Pause', $('#playBtn'));
   setPlaying(false);
   selectUnderPlayhead();
-  await wait(700);
-  key(['⌘', 'B'], 'Cut at playhead', $('#cutBtn'));
+  await wait(500);
+  // Click the scissors to cut, then the trash to delete the cut-off tail.
+  await clickButton($('#cutBtn'), 'Cut at playhead');
   cut();
   sel = new Set([segs[segs.length - 1].id]); // the cut-off tail comes up selected
-  await wait(700);
-  // Straight to the trash button to delete it.
-  await moveTo(center($('#delBtn')), 700);
-  await click();
-  say('Delete segment');
-  $('#delBtn').classList.add('flash');
-  later(250, () => $('#delBtn').classList.remove('flash'));
+  await wait(600);
+  await clickButton($('#delBtn'), 'Delete segment');
   del();
   await wait(1200);
 
